@@ -1,2 +1,2 @@
 # VAE-VSE
-Implementation of model introduce in INTERPRETABLE REPRESENTATION LEARNING ON NATURAL IMAGE DATASETS VIA RECONSTRUCTION IN VISUAL-SEMANTIC EMBEDDING SPACE Nao Nakagawa†, Ren Togo††, Takahiro Ogawa††† and Miki Haseyama†††
+Implementation of model introduced in INTERPRETABLE REPRESENTATION LEARNING ON NATURAL IMAGE DATASETS VIA RECONSTRUCTION IN VISUAL-SEMANTIC EMBEDDING SPACE Nao Nakagawa†, Ren Togo††, Takahiro Ogawa††† and Miki Haseyama†††
