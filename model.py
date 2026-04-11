@@ -154,7 +154,7 @@ class InterpretableVAE(nn.Module):
     def __init__(
         self,
         latent_dim: int = 32,
-        vse_dim: int = 1024,
+        vse_dim: int = 512,
         image_channels: int = 3,
         vse_encoder: Optional[nn.Module] = None
     ):
@@ -229,7 +229,9 @@ class InterpretableVAE(nn.Module):
         # Get VSE vectors if encoder is available
         if self.vse_encoder is not None:
             with torch.no_grad():
-                w = self.vse_encoder(x)
+                # Resize to 224x224 for CLIP
+                x_for_clip = F.interpolate(x, size=224, mode='bilinear', align_corners=False)
+                w = self.vse_encoder(x_for_clip)
             outputs['w'] = w
         
         return outputs
