@@ -52,7 +52,7 @@ def train_epoch(
         'ortho_reg': 0.0
     }
     
-    for batch_idx, (data, _) in enumerate(tqdm(dataloader, desc="Training")):
+    for batch_idx, (data, _) in enumerate(dataloader):
         data = data.to(device)
         
         # Forward pass
@@ -233,7 +233,7 @@ def train(
                     'learning_rate': learning_rate
                 }
             }, checkpoint_path)
-            print(f"\n✓ Saved best model to {checkpoint_path}")
+            
         
         # Save periodic checkpoint
         if (epoch + 1) % 10 == 0:
@@ -243,7 +243,6 @@ def train(
                 'model_state_dict': model.state_dict(),
                 'optimizer_state_dict': optimizer.state_dict(),
             }, checkpoint_path)
-            print(f"✓ Saved checkpoint to {checkpoint_path}")
 
 
 def get_dataloaders(
