@@ -21,7 +21,7 @@ class Encoder(nn.Module):
     def __init__(self, latent_dim: int = 32, image_channels: int = 3):
         super().__init__()
         
-        # Convolutional layers (for 64x64 images as in the paper)
+        # Convolutional layers 
         self.conv_layers = nn.Sequential(
             # 64x64 -> 32x32
             nn.Conv2d(image_channels, 32, kernel_size=4, stride=2, padding=1),
@@ -37,7 +37,7 @@ class Encoder(nn.Module):
             nn.ReLU(),
         )
         
-        # Calculate flattened size: 256 * 4 * 4 = 4096
+        # Calculate flattened size
         self.flatten_size = 256 * 4 * 4
         
         # Output layers for mean and log-variance
@@ -53,7 +53,7 @@ class Encoder(nn.Module):
             logvar: Log variance of latent distribution [batch_size, latent_dim]
         """
         h = self.conv_layers(x)
-        h = h.view(h.size(0), -1)  # Flatten
+        h = h.view(h.size(0), -1) 
         mu = self.fc_mu(h)
         logvar = self.fc_logvar(h)
         return mu, logvar
@@ -72,18 +72,14 @@ class Decoder(nn.Module):
         
         # Transposed convolutional layers
         self.deconv_layers = nn.Sequential(
-            # 4x4 -> 8x8
             nn.ConvTranspose2d(256, 128, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            # 8x8 -> 16x16
             nn.ConvTranspose2d(128, 64, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            # 16x16 -> 32x32
             nn.ConvTranspose2d(64, 32, kernel_size=4, stride=2, padding=1),
             nn.ReLU(),
-            # 32x32 -> 64x64
             nn.ConvTranspose2d(32, image_channels, kernel_size=4, stride=2, padding=1),
-            nn.Sigmoid(),  # Output in [0, 1]
+            nn.Sigmoid(),  
         )
     
     def forward(self, z: torch.Tensor) -> torch.Tensor:
@@ -103,9 +99,8 @@ class SemanticSubDecoder(nn.Module):
     """
     Linear semantic sub-decoder that maps latent codes to VSE space.
     
-    Key innovation: Each column of the weight matrix A corresponds to a word vector 
-    that explains one latent dimension. This allows semantic interpretation of what 
-    each latent variable represents.
+    Each column of the weight matrix A corresponds to a word vector 
+    that explains one latent dimension.
     """
     
     def __init__(self, latent_dim: int = 32, vse_dim: int = 1024):
@@ -146,9 +141,6 @@ class SemanticSubDecoder(nn.Module):
 class InterpretableVAE(nn.Module):
     """
     Complete VAE model with semantic sub-decoder for interpretable representations.
-    
-    This model learns disentangled representations where each latent dimension
-    can be explained by word vectors from a Visual-Semantic Embedding space.
     """
     
     def __init__(
@@ -163,14 +155,14 @@ class InterpretableVAE(nn.Module):
         self.latent_dim = latent_dim
         self.vse_dim = vse_dim
         
-        # Main VAE components
+        # Main VAE 
         self.encoder = Encoder(latent_dim, image_channels)
         self.decoder = Decoder(latent_dim, image_channels)
         
-        # Semantic components (the key innovation)
+        # Semantic part
         self.semantic_sub_decoder = SemanticSubDecoder(latent_dim, vse_dim)
         
-        # Pre-trained VSE encoder (frozen during training)
+        # Pre-trained VSE encoder (CLIP is used in the model)
         self.vse_encoder = vse_encoder
         if self.vse_encoder is not None:
             for param in self.vse_encoder.parameters():
@@ -215,7 +207,7 @@ class InterpretableVAE(nn.Module):
         # Decode to image
         x_recon = self.decoder(z)
         
-        # Semantic reconstruction (map latent to VSE space)
+        # Semantic reconstruction 
         w_hat = self.semantic_sub_decoder(z)
         
         outputs = {
@@ -226,10 +218,10 @@ class InterpretableVAE(nn.Module):
             'w_hat': w_hat
         }
         
-        # Get VSE vectors if encoder is available
+        # Get VSE vectors 
         if self.vse_encoder is not None:
             with torch.no_grad():
-                # Resize to 224x224 for CLIP
+                # it is resized in order to use clip
                 x_for_clip = F.interpolate(x, size=224, mode='bilinear', align_corners=False)
                 w = self.vse_encoder(x_for_clip)
             outputs['w'] = w
@@ -253,7 +245,7 @@ class InterpretableVAE(nn.Module):
     ) -> Dict[int, list]:
         """
         Get word interpretations for each latent dimension by finding
-        the words most similar to each basis vector.
+        the words most similar (cosine similarity) to each basis vector.
         
         Args:
             word_embeddings: Pre-computed word embeddings [vocab_size, vse_dim]
@@ -268,14 +260,14 @@ class InterpretableVAE(nn.Module):
         
         for i in range(self.latent_dim):
             # Get basis vector for dimension i
-            basis = basis_vectors[i].unsqueeze(0)  # [1, vse_dim]
+            basis = basis_vectors[i].unsqueeze(0)  
             
             # Compute cosine similarities with all words
             similarities = F.cosine_similarity(
-                basis.unsqueeze(1),  # [1, 1, vse_dim]
-                word_embeddings.unsqueeze(0),  # [1, vocab_size, vse_dim]
+                basis.unsqueeze(1), 
+                word_embeddings.unsqueeze(0), 
                 dim=2
-            ).squeeze(0)  # [vocab_size]
+            ).squeeze(0) 
             
             # Get top-k positive and negative
             top_pos_indices = similarities.topk(top_k).indices
@@ -318,8 +310,8 @@ def compute_losses(
     logvar = model_outputs['logvar']
     w_hat = model_outputs['w_hat']
     
-    # Reconstruction loss L_AE (negative log likelihood)
-    # Using MSE (can also use BCE for binary images)
+    # Reconstruction loss L_AE 
+    # Using MSE 
     recon_loss = F.mse_loss(x_recon, x, reduction='sum') / x.size(0)
     
     # Regularization loss L_REG (KL divergence)
@@ -331,7 +323,7 @@ def compute_losses(
         'kl_loss': kl_loss,
     }
     
-    # Semantic loss L_VSE (if VSE vectors are available)
+    # Semantic loss L_VSE (actually clip)
     if use_semantic_loss and 'w' in model_outputs:
         w = model_outputs['w']
         # MSE between VSE reconstruction and ground truth
@@ -365,8 +357,8 @@ def compute_orthogonal_regularization(model: InterpretableVAE) -> torch.Tensor:
     # Get weight matrix A [vse_dim, latent_dim]
     A = model.semantic_sub_decoder.A.weight
     
-    # Compute A^T A [latent_dim, latent_dim]
-    # This gives us the dot products between all pairs of basis vectors
+    # Compute A^T A 
+    # the dot products between all pairs of basis vectors
     gram = torch.mm(A.T, A)
     
     # Sum of off-diagonal elements (correlations between different dimensions)
