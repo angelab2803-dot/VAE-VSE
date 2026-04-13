@@ -223,6 +223,7 @@ class InterpretableVAE(nn.Module):
             with torch.no_grad():
                 # it is resized in order to use clip
                 x_for_clip = F.interpolate(x, size=224, mode='bilinear', align_corners=False)
+                x_for_clip = x_for_clip.float() 
                 w = self.vse_encoder(x_for_clip)
             outputs['w'] = w
         
