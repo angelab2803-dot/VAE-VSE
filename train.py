@@ -1,8 +1,5 @@
 """
 Training script for Interpretable VAE with VSE
-
-This script provides functions to train the model on image datasets
-like CelebA or Stanford Cars.
 """
 
 import torch
@@ -333,26 +330,26 @@ if __name__ == "__main__":
     
     # Hyperparameters from the paper
     LATENT_DIM = 32
-    VSE_DIM = 1024  # Dimension of VSE space (depends on your VSE model)
+    VSE_DIM = 1024  # Dimension of VSE space 
     IMAGE_CHANNELS = 3  # 3 for RGB, 1 for grayscale
     BATCH_SIZE = 64
     NUM_EPOCHS = 100
     LEARNING_RATE = 1e-4
-    BETA = 1.0  # Try 10 for stronger disentanglement
-    GAMMA = 10.0  # Weight for semantic loss
+    BETA = 1.0  
+    GAMMA = 10.0  
     
-    # Create model (without VSE encoder for now)
+    # Create model 
     model = InterpretableVAE(
         latent_dim=LATENT_DIM,
         vse_dim=VSE_DIM,
         image_channels=IMAGE_CHANNELS,
-        vse_encoder=None  # TODO: Add your pre-trained VSE encoder here
+        vse_encoder=None  
     )
     
     # Load data
     print("Loading dataset...")
     train_loader, val_loader = get_dataloaders(
-        dataset_name='cifar10',  # Start with CIFAR-10 for testing
+        dataset_name='cifar10',  
         batch_size=BATCH_SIZE
     )
     
