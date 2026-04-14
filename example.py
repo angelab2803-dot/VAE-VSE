@@ -7,9 +7,6 @@ This script shows:
 3. How to get semantic interpretations
 4. How to visualize results
 
-Note: This is a simplified example. For full VSE functionality,
-you'll need to integrate a pre-trained VSE encoder (e.g., from the
-original VSE paper by Kiros et al. 2014).
 """
 
 import torch
